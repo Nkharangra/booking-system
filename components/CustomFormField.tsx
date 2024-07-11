@@ -142,6 +142,18 @@ const RenderInput = ({ field, props }: { field: any; props: CustomProps }) => {
           </Select>
         </FormControl>
       );
+    case FormFieldType.CHECKBOX:
+      return (
+        <FormControl>
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              checked={field.value || false}
+              onChange={(e) => field.onChange(e.target.checked)}
+            />
+          </label>
+        </FormControl>
+      );
     case FormFieldType.SKELETON:
       return props.renderSkeleton ? props.renderSkeleton(field) : null;
     default:

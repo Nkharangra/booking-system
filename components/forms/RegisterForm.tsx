@@ -1,58 +1,102 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { createUser } from "@/lib/actions/learner.actions";
-import { UserFormValidation } from "@/lib/validations";
-import { FileUploader } from "@/components/FileUploader"; // Add this import
-
-import "react-phone-number-input/style.css";
-import CustomFormField, { FormFieldType } from "../CustomFormField";
-import SubmitButton from "../SubmitButton";
 import { Form, FormControl } from "@/components/ui/form";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { SelectItem } from "@/components/ui/select";
 import {
+  AvailabilityOptions,
+  ExperienceLevel,
   GenderOptions,
   IdentificationTypes,
   Instructors,
+  LearnerFormDefaultValues,
   PreferredLanguage,
+  TimeSlots,
   TransmissionType,
 } from "@/constatnts";
-import { SelectItem } from "@radix-ui/react-select";
-import Image from "next/image";
 
-export const RegisterForm = ({ user }: { user: User }) => {
+import { registerLearner } from "@/lib/actions/learner.actions";
+import { LearnerFormValidation } from "@/lib/validations";
+
+import "react-datepicker/dist/react-datepicker.css";
+import "react-phone-number-input/style.css";
+import CustomFormField, { FormFieldType } from "../CustomFormField";
+import { FileUploader } from "../FileUploader";
+import SubmitButton from "../SubmitButton";
+
+export const RegisterForm = ({ userId }: { userId: string }) => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
-  const form = useForm<z.infer<typeof UserFormValidation>>({
-    resolver: zodResolver(UserFormValidation),
+  const form = useForm<z.infer<typeof LearnerFormValidation>>({
+    resolver: zodResolver(LearnerFormValidation),
     defaultValues: {
-      name: "",
-      email: "",
-      phone: "",
+      ...LearnerFormDefaultValues,
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof UserFormValidation>) => {
+  const onSubmit = async (values: z.infer<typeof LearnerFormValidation>) => {
+    console.log(values);
     setIsLoading(true);
 
+    // Store file info in form data as
+    let formData;
+    if (
+      values.identificationDocument &&
+      values.identificationDocument?.length > 0
+    ) {
+      const blobFile = new Blob([values.identificationDocument[0]], {
+        type: values.identificationDocument[0].type,
+      });
+
+      formData = new FormData();
+      formData.append("blobFile", blobFile);
+      formData.append("fileName", values.identificationDocument[0].name);
+    }
+
     try {
-      const user = {
+      if (!userId || !userId.length) {
+        console.error("User or User ID is undefined");
+      }
+      const learner = {
+        userId,
         name: values.name,
         email: values.email,
         phone: values.phone,
+        gender: values.gender,
+        address: values.address,
+        preferredLanguage: values.preferredLanguage,
+        emergencyContactName: values.emergencyContactName,
+        emergencyContactNumber: values.emergencyContactNumber,
+        primaryInstructor: values.primaryInstructor,
+        transmissionType: values.transmissionType,
+        experienceLevel: values.experienceLevel,
+        learnerPermitNumber: values.learnerPermitNumber,
+        learnerPermitExpiryDate: new Date(values.learnerPermitExpiryDate),
+        availabiliblyOptions: values.availabiliblyOptions,
+        timeSlots: values.timeSlots,
+        otherInformation: values.otherInformation,
+        identificationType: values.identificationType,
+        identificationNumber: values.identificationNumber,
+        identificationDocument: values.identificationDocument
+          ? formData
+          : undefined,
+        privacyConsent: values.privacyConsent,
+        lessonConsent: values.lessonConsent,
+        disclosureConsent: values.disclosureConsent,
       };
-
-      const newUser = await createUser(user);
-
-      if (newUser) {
-        router.push(`/learners/${newUser.$id}/register`);
+      console.log(learner);
+      const newLearner = await registerLearner(learner);
+      if (newLearner) {
+        router.push(`/learners/${userId}/new-appointment`);
       }
     } catch (error) {
       console.log(error);
@@ -144,14 +188,21 @@ export const RegisterForm = ({ user }: { user: User }) => {
               label="Address"
               placeholder="14 street, New york, NY - 5101"
             />
-
             <CustomFormField
-              fieldType={FormFieldType.INPUT}
+              fieldType={FormFieldType.SELECT}
               control={form.control}
-              name="competency"
-              label="Competency Level"
-              placeholder=" Operational"
-            />
+              name="preferredLanguage"
+              label="Preferred Language"
+              placeholder="English"
+            >
+              {PreferredLanguage.map((language, i) => (
+                <SelectItem key={language + i} value={language}>
+                  <div className="flex cursor-pointer items-center gap-2">
+                    <p>{language}</p>
+                  </div>
+                </SelectItem>
+              ))}
+            </CustomFormField>
           </div>
 
           {/* Emergency Contact Name & Emergency Contact Number */}
@@ -176,10 +227,10 @@ export const RegisterForm = ({ user }: { user: User }) => {
 
         <section className="space-y-6">
           <div className="mb-9 space-y-1">
-            <h2 className="sub-header">Medical Information</h2>
+            <h2 className="sub-header">Related Information</h2>
           </div>
 
-          {/* PRIMARY CARE PHYSICIAN */}
+          {/* PRIMARY CARE Instructor */}
           <CustomFormField
             fieldType={FormFieldType.SELECT}
             control={form.control}
@@ -232,62 +283,83 @@ export const RegisterForm = ({ user }: { user: User }) => {
             <CustomFormField
               fieldType={FormFieldType.SELECT}
               control={form.control}
-              name="preferredLanguage"
-              label="Preferred Language"
-              placeholder="English"
+              name="experienceLevel"
+              label="Experience Level"
+              placeholder="Please select your experience level"
             >
-              {PreferredLanguage.map((language, i) => (
-                <SelectItem key={language + i} value={language}>
+              {ExperienceLevel.map((experience, i) => (
+                <SelectItem key={experience + i} value={experience}>
                   <div className="flex cursor-pointer items-center gap-2">
-                    <p>{language}</p>
+                    <p>{experience}</p>
                   </div>
                 </SelectItem>
               ))}
             </CustomFormField>
           </div>
 
-          {/* ALLERGY & CURRENT MEDICATIONS */}
+          {/* Learner's Permit Number & Expiry Date */}
           <div className="flex flex-col gap-6 xl:flex-row">
             <CustomFormField
-              fieldType={FormFieldType.TEXTAREA}
+              fieldType={FormFieldType.INPUT}
               control={form.control}
-              name="allergies"
-              label="Allergies (if any)"
-              placeholder="Peanuts, Penicillin, Pollen"
+              name="learnerPermitNumber"
+              label="Learner's Permit Number"
+              placeholder="XXXXXXXX00"
             />
 
             <CustomFormField
-              fieldType={FormFieldType.TEXTAREA}
+              fieldType={FormFieldType.DATE_PICKER}
               control={form.control}
-              name="currentMedication"
-              label="Current medications"
-              placeholder="Ibuprofen 200mg, Levothyroxine 50mcg"
+              name="learnerPermitExpiryDate"
+              label="Learner's Permit Expiry Date"
             />
           </div>
 
-          {/* FAMILY MEDICATION & PAST MEDICATIONS */}
+          {/* Availibility*/}
+          <div className="flex flex-col gap-6 xl:flex-row">
+            <CustomFormField
+              fieldType={FormFieldType.SELECT}
+              control={form.control}
+              name="availabiliblyOptions"
+              label="Availability Options"
+              placeholder="Select availability options"
+            >
+              {AvailabilityOptions.map((type, i) => (
+                <SelectItem key={type + i} value={type}>
+                  {type}
+                </SelectItem>
+              ))}
+            </CustomFormField>
+
+            <CustomFormField
+              fieldType={FormFieldType.SELECT}
+              control={form.control}
+              name="timeSlots"
+              label="Prefered Time Slots"
+              placeholder="Select preferred time slots"
+            >
+              {TimeSlots.map((type, i) => (
+                <SelectItem key={type + i} value={type}>
+                  {type}
+                </SelectItem>
+              ))}
+            </CustomFormField>
+          </div>
+          {/* Other Relevant Informations*/}
           <div className="flex flex-col gap-6 xl:flex-row">
             <CustomFormField
               fieldType={FormFieldType.TEXTAREA}
               control={form.control}
-              name="familyMedicalHistory"
-              label=" Family medical history (if relevant)"
-              placeholder="Mother had brain cancer, Father has hypertension"
-            />
-
-            <CustomFormField
-              fieldType={FormFieldType.TEXTAREA}
-              control={form.control}
-              name="pastMedicalHistory"
-              label="Past medical history"
-              placeholder="Appendectomy in 2015, Asthma diagnosis in childhood"
+              name="otherInformation"
+              label="Other Relevant Information"
+              placeholder="I don't have learner's permit yet. I have international driving license."
             />
           </div>
         </section>
 
         <section className="space-y-6">
           <div className="mb-9 space-y-1">
-            <h2 className="sub-header">Identification and Verfication</h2>
+            <h2 className="sub-header">Identification and Verification</h2>
           </div>
 
           <CustomFormField
@@ -333,8 +405,8 @@ export const RegisterForm = ({ user }: { user: User }) => {
           <CustomFormField
             fieldType={FormFieldType.CHECKBOX}
             control={form.control}
-            name="treatmentConsent"
-            label="I consent to receive treatment for my health condition."
+            name="lessonConsent"
+            label="I consent to learn driving lessons from the instructor."
           />
 
           <CustomFormField
@@ -342,7 +414,7 @@ export const RegisterForm = ({ user }: { user: User }) => {
             control={form.control}
             name="disclosureConsent"
             label="I consent to the use and disclosure of my health
-            information for treatment purposes."
+            information for the purpose of providing me with driving lessons."
           />
 
           <CustomFormField
@@ -354,7 +426,7 @@ export const RegisterForm = ({ user }: { user: User }) => {
           />
         </section>
 
-        <SubmitButton isLoading={isLoading}>Get Started</SubmitButton>
+        <SubmitButton isLoading={isLoading}>Submit and Continue</SubmitButton>
       </form>
     </Form>
   );

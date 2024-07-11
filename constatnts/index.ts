@@ -1,45 +1,49 @@
 export const GenderOptions = ["Male", "Female", "Other", "Prefer not to say"];
 
 export const TransmissionType = ["Automatic", "Manual"];
+
 export const PreferredLanguage = ["English", "Hindi", "Punjabi", "Other"];
-export const PatientFormDefaultValues = {
-  firstName: "",
-  lastName: "",
+
+export const ExperienceLevel = [
+  "No Experience",
+  "Beginner",
+  "Intermediate",
+  "Advanced",
+];
+export const TimeSlots = ["Morning", "Afternoon", "Evening", "Night"];
+
+export const AvailabilityOptions = ["Weekdays", "Weekends", "Both"];
+
+export const LearnerFormDefaultValues = {
+  name: "",
   email: "",
   phone: "",
-  birthDate: new Date(Date.now()),
   gender: "Male" as Gender,
   address: "",
-  occupation: "",
+  preferredLanguage: "",
   emergencyContactName: "",
   emergencyContactNumber: "",
-  primaryPhysician: "",
-  insuranceProvider: "",
-  insurancePolicyNumber: "",
-  allergies: "",
-  currentMedication: "",
-  familyMedicalHistory: "",
-  pastMedicalHistory: "",
+  primaryInstructor: "",
+  transmissionType: "",
+  experienceLevel: "",
+  learnerPermitNumber: "",
+  learnerPermitExpiryDate: new Date(Date.now()),
+  availabiliblyOptions: "",
+  timeSlots: "",
+  otherInformation: "",
   identificationType: "Birth Certificate",
   identificationNumber: "",
   identificationDocument: [],
-  treatmentConsent: false,
+  lessonConsent: false,
   disclosureConsent: false,
   privacyConsent: false,
 };
 
 export const IdentificationTypes = [
   "Birth Certificate",
-  "Driver's License",
-  "Medical Insurance Card/Policy",
-  "Military ID Card",
-  "National Identity Card",
+  "Learner Permit",
   "Passport",
-  "Resident Alien Card (Green Card)",
-  "Social Security Card",
-  "State ID Card",
-  "Student ID Card",
-  "Voter ID Card",
+  "Intrernational Driver's Permit",
 ];
 
 export const Instructors = [

@@ -1,11 +1,10 @@
 /* eslint-disable no-unused-vars */
-
 declare type SearchParamProps = {
   params: { [key: string]: string };
   searchParams: { [key: string]: string | string[] | undefined };
 };
 
-declare type Gender = "Male" | "Female" | "Other";
+declare type Gender = "Male" | "Female" | "Other" | "Prefer not to say";
 declare type Status = "pending" | "scheduled" | "cancelled";
 
 declare interface CreateUserParams {
@@ -19,13 +18,27 @@ declare interface User extends CreateUserParams {
 
 declare interface RegisterUserParams extends CreateUserParams {
   userId: string;
-  birthDate: Date;
-  gender: Gender;
+  name: string;
+  email: string;
+  phone: string;
+  gender: string | undefined;
   address: string;
-  occupation: string;
+  preferredLanguage: string | undefined;
   emergencyContactName: string;
   emergencyContactNumber: string;
-  primaryInstructor: string;
+  primaryInstructor: string | undefined;
+  transmissionType: string | undefined;
+  experienceLevel: string | undefined;
+  learnerPermitNumber: string | undefined;
+  learnerPermitExpiryDate: Date | undefined;
+  availabiliblyOptions: string | undefined;
+  timeSlots: string | undefined;
+  otherInformation: string | undefined;
+  identificationType: string | undefined;
+  identificationNumber: string | undefined;
+  identificationDocument: FormData | undefined;
+  disclosureConsent: boolean | undefined;
+  lessonConsent: boolean | undefined;
   privacyConsent: boolean;
 }
 
